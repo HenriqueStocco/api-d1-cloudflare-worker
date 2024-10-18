@@ -43,5 +43,3 @@ jobs:
       - name: Deploy API to Cloudflare Worker (Production)
         if: steps.changed-files.outputs.any_changed == 'true'
         run: bun run wrangler deploy
-        env: 
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
