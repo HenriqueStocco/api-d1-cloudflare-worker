@@ -28,7 +28,7 @@ jobs:
 
       - name: Check if API files changed
         id: changed-files
-        uses: tj-actions/changed-files@latest
+        uses: tj-actions/changed-files
         with: 
          files: ./**
 
