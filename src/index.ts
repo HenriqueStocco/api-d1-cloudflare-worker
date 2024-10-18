@@ -1,8 +1,12 @@
 import { Hono } from 'hono'
-import { note } from './note-block-routes'
+import { notes } from './router/notes'
 
-const app = new Hono().basePath('/api')
+export type Bindings = {
+  DB: D1Database
+}
 
-app.route('/notes', note)
+const app = new Hono<{ Bindings: Bindings }>().basePath('/api')
+
+app.route('/notes', notes)
 
 export default app

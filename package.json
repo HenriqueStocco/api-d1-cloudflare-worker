@@ -1,12 +1,17 @@
 {
   "name": "working-with-cloudf-worker",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --port 9000 --inspector-port 9230",
     "deploy": "wrangler deploy",
     "lint": "biome lint ./",
-    "format": "biome format --write ./"
+    "format": "biome format --write ./",
+    "db:migrate": "wrangler d1 migrations apply notes-block-api-database --remote",
+    "db:migrate.local": "wrangler d1 migrations apply notes-block-api-database --local",
+    "db:generate": "drizzle-kit generate:sqlite --config=./drizzle.config.ts",
+    "db:drop": "drizzle-kit drop out=migrations --config=./drizzle.config.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.4.1",
     "drizzle-orm": "^0.35.1",
     "hono": "^4.6.5",
     "zod": "^3.23.8"
@@ -14,6 +19,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@cloudflare/workers-types": "^4.20240925.0",
+    "@types/node": "^22.7.6",
     "drizzle-kit": "^0.26.2",
     "wrangler": "^3.79.0"
   }
