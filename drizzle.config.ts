@@ -1,14 +1,16 @@
-import {defineConfig} from 'drizzle-kit'
-import {env} from './src/lib/env'
+import path from 'node:path'
+import type { Config } from 'drizzle-kit'
 
-export default defineConfig({
+const wranglerConfigPath = path.resolve(__dirname, "./wrangler.toml")
+
+const remoteD1Config = {
+    driver: 'd1',
+    dbCredentials: {
+      wranglerConfigPath,
+      dbName: "notes-block-api-database",
+    },
   schema: './src/db/schema.ts',
   out: './src/db/migrations',
-  dialect: 'sqlite',
-  driver: 'd1-http',
-  dbCredentials: {
-    accountId: env.CLOUDFLARE_ACCOUNT_ID,
-    databaseId: env.CLOUDFLARE_DATABASE_ID,
-    token: env.CLOUDFLARE_D1_TOKEN,
-  },
-});
+} satisfies Config;
+
+export remoteD1Config;
