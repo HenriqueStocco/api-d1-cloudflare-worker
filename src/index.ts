@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { note } from './note-block-routes'
+import { note } from './router/notes'
 
 const app = new Hono().basePath('/api')
 
