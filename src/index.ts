@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { note } from './router/notes'
+import { notes } from './router/notes'
 
 export type Bindings = {
   DB: D1Database
@@ -7,6 +7,6 @@ export type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>().basePath('/api')
 
-app.route('/notes', note)
+app.route('/notes', notes)
 
 export default app
