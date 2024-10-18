@@ -8,7 +8,8 @@
     "db:migrate": "wrangler d1 migrations apply notes-block-api-database --remote",
     "db:migrate.local": "wrangler d1 migrations apply notes-block-api-database --local",
     "db:generate": "drizzle-kit generate:sqlite --config=./drizzle.config.ts",
-    "db:drop": "drizzle-kit drop out=migrations --config=./drizzle.config.ts"
+    "db:drop": "drizzle-kit drop out=migrations --config=./drizzle.config.ts",
+    "bundle": "wrangler deploy --dry-run --outdir dist"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.1",
