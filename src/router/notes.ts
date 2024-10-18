@@ -1,20 +1,36 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
+import type { Bindings } from '..'
+import { database, asc, eq } from '../db'
+import { note } from '../db/schema'
 
-export const note = new Hono()
+export const notes = new Hono<{ Bindings: Bindings }>()
 
 /**
  * Get all notes
  */
-note.get('/', async ctx => {
-  return ctx.json({ message: 'All notes' }, 200)
+notes.get('/', async ctx => {
+  try {
+    const allNotes = await database(ctx.env.DB)
+      .select()
+      .from(note)
+      .orderBy(asc(note.id))
+
+    if (allNotes.length <= 0)
+      return ctx.json({ message: 'Tasks no exists' }, 200)
+
+    return ctx.json(allNotes)
+  } catch (error) {
+    console.error(error)
+    return ctx.json({ message: 'Internal Server Error' }, 500)
+  }
 })
 
 /**
  * Get one specific note by id
  */
-note.get(
+notes.get(
   '/:id',
   zValidator(
     'param',
@@ -25,14 +41,27 @@ note.get(
   async ctx => {
     const { id } = ctx.req.valid('param')
 
-    return ctx.json({ message: `Your note ${id}` }, 200)
+    if (!id) return ctx.text('Missing note id', 400)
+
+    try {
+      const note = await database(ctx.env.DB).query.note.findFirst({
+        where: (note, { eq }) => eq(note.id, id),
+      })
+
+      if (!note) return ctx.text('Note not exists', 404)
+
+      return ctx.json(note)
+    } catch (error) {
+      console.error(error)
+      return ctx.text('Internal Server Error', 500)
+    }
   },
 )
 
 /**
  * Create a note
  */
-note.post(
+notes.post(
   '/',
   zValidator(
     'json',
@@ -53,14 +82,29 @@ note.post(
         400,
       )
 
-    return ctx.json({ message: 'Note created' }, 201)
+    try {
+      await database(ctx.env.DB)
+        .insert(note)
+        .values({
+          title,
+          description,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning()
+
+      return ctx.text('Note was successfully created', 201)
+    } catch (error) {
+      console.error(error)
+      return ctx.text('Internal Server Error', 500)
+    }
   },
 )
 
 /**
  * Update an entire note by id
  */
-note.put(
+notes.put(
   '/:id',
   zValidator(
     'param',
@@ -88,18 +132,35 @@ note.put(
         400,
       )
 
-    return ctx.json(
-      { message: 'Task updated successfully', news: { title, description } },
-      200,
-    )
+    try {
+      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
+        where: (note, { eq }) => eq(note.id, id),
+      })
+
+      if (!noteIdExists) return ctx.text('Note id not exists', 404)
+
+      await database(ctx.env.DB)
+        .update(note)
+        .set({
+          title: title,
+          description: description,
+          updatedAt: new Date(),
+        })
+        .where(eq(note.id, id))
+
+      return ctx.text('Note was successfully updated', 200)
+    } catch (error) {
+      console.error(error)
+      return ctx.text('Internal Server Error', 500)
+    }
   },
 )
 
 /**
  * Update just the title
  */
-note.patch(
-  '/:id',
+notes.patch(
+  '/:id/title',
   zValidator('param', z.object({ id: z.coerce.number() })),
   zValidator(
     'json',
@@ -113,15 +174,31 @@ note.patch(
 
     if (!id || !title) return ctx.text('Missing note id or new title', 400)
 
-    return ctx.text('Title updated successfully', 200)
+    try {
+      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
+        where: (note, { eq }) => eq(note.id, id),
+      })
+
+      if (!noteIdExists) return ctx.text('Note id not exists', 404)
+
+      await database(ctx.env.DB)
+        .update(note)
+        .set({ title, updatedAt: new Date() })
+        .where(eq(note.id, id))
+
+      return ctx.text('Title was updated successfully', 200)
+    } catch (error) {
+      console.error(error)
+      return ctx.text('Internal Server Error', 500)
+    }
   },
 )
 
 /**
  * Update just the description
  */
-note.patch(
-  '/:id',
+notes.patch(
+  '/:id/description',
   zValidator('param', z.object({ id: z.coerce.number() })),
   zValidator(
     'json',
@@ -133,17 +210,38 @@ note.patch(
     const { id } = ctx.req.valid('param')
     const { description } = ctx.req.valid('json')
 
-    if (!id || !description)
+    if (!id || !description) {
       return ctx.text('Missing note id or new description', 400)
+    }
 
-    return ctx.text('Description updated successfully', 200)
+    try {
+      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
+        where: (note, { eq }) => eq(note.id, id),
+      })
+
+      if (!noteIdExists) return ctx.text('Note id not exists', 404)
+
+      await database(ctx.env.DB)
+        .update(note)
+        .set({
+          description,
+          updatedAt: new Date(),
+        })
+        .where(eq(note.id, id))
+        .returning()
+
+      return ctx.text('Description was updated successfully', 200)
+    } catch (error) {
+      console.error(error)
+      return ctx.text('Internal Server Error', 500)
+    }
   },
 )
 
 /**
  * Delete one specific note by id
  */
-note.delete(
+notes.delete(
   '/:id',
   zValidator(
     'param',
@@ -156,13 +254,34 @@ note.delete(
 
     if (!id) return ctx.text('Missing id', 400)
 
-    return ctx.json({ message: 'Note deleted successfully' }, 200)
+    try {
+      const noteExist = await database(ctx.env.DB).query.note.findFirst({
+        where: (note, { eq }) => eq(note.id, id),
+      })
+
+      if (!noteExist) return ctx.text('Note was deleted or no exist', 404)
+
+      await database(ctx.env.DB).delete(note).where(eq(note.id, id)).returning()
+
+      return ctx.text('Note was delete successfully', 200)
+    } catch (error) {
+      console.error(error)
+      return ctx.text('Internal Server Error', 500)
+    }
   },
 )
 
 /**
  * Delete all notes
- */
-note.delete('/', async ctx => {
-  return ctx.text('All notes are deleted')
+
+notes.delete('/all', async ctx => {
+  try {
+    await database(ctx.env.DB).delete(note)
+
+    return ctx.text('All notes was deleted successfully', 200)
+  } catch (error) {
+    console.error(error)
+    return ctx.text('Internal Server Error', 500)
+  }
 })
+*/
