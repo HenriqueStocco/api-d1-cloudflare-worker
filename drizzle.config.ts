@@ -13,4 +13,4 @@ const remoteD1Config = {
   out: './src/db/migrations',
 } satisfies Config;
 
-export remoteD1Config;
+export { remoteD1Config }
