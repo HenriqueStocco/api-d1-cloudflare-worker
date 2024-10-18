@@ -1,12 +1,12 @@
 {
   "name": "working-with-cloudf-worker",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --port 9000 --inspector-port 9230",
     "deploy": "wrangler deploy",
     "lint": "biome lint ./",
     "format": "biome format --write ./",
-    "db:migrate": ".wrangler d1 migrations apply notes-block-api-database --remote",
-    "db:migrate.local": ".wrangler d1 migrations apply notes-block-api-database --local",
+    "db:migrate": "wrangler d1 migrations apply notes-block-api-database --remote",
+    "db:migrate.local": "wrangler d1 migrations apply notes-block-api-database --local",
     "db:generate": "drizzle-kit generate:sqlite --config=./drizzle.config.ts",
     "db:drop": "drizzle-kit drop out=migrations --config=./drizzle.config.ts"
   },
