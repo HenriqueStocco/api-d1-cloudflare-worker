@@ -2,7 +2,7 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Bindings } from '..'
-import { asc, database, eq } from '../db'
+import { asc, eq, pgDrizzle, sql } from '../db'
 import { note } from '../db/schema'
 
 export const notes = new Hono<{ Bindings: Bindings }>()
@@ -12,7 +12,7 @@ export const notes = new Hono<{ Bindings: Bindings }>()
  */
 notes.get('/', async ctx => {
   try {
-    const allNotes = await database(ctx.env.DB)
+    const allNotes = await pgDrizzle(ctx.env.DATABASE_URL)
       .select()
       .from(note)
       .orderBy(asc(note.id))
@@ -44,7 +44,7 @@ notes.get(
     if (!id) return ctx.text('Missing note id', 400)
 
     try {
-      const note = await database(ctx.env.DB).query.note.findFirst({
+      const note = await pgDrizzle(ctx.env.DATABASE_URL).query.note.findFirst({
         where: (note, { eq }) => eq(note.id, id),
       })
 
@@ -83,13 +83,15 @@ notes.post(
       )
 
     try {
-      await database(ctx.env.DB)
+      await pgDrizzle(ctx.env.DATABASE_URL)
         .insert(note)
         .values({
+          id: 1,
+          userId: '',
           title,
           description,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: sql`NOW()`,
+          updatedAt: sql`NOW()`
         })
         .returning()
 
@@ -133,13 +135,15 @@ notes.put(
       )
 
     try {
-      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
+      const noteIdExists = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.note.findFirst({
         where: (note, { eq }) => eq(note.id, id),
       })
 
       if (!noteIdExists) return ctx.text('Note id not exists', 404)
 
-      await database(ctx.env.DB)
+      await pgDrizzle(ctx.env.DATABASE_URL)
         .update(note)
         .set({
           title: title,
@@ -175,13 +179,15 @@ notes.patch(
     if (!id || !title) return ctx.text('Missing note id or new title', 400)
 
     try {
-      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
+      const noteIdExists = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.note.findFirst({
         where: (note, { eq }) => eq(note.id, id),
       })
 
       if (!noteIdExists) return ctx.text('Note id not exists', 404)
 
-      await database(ctx.env.DB)
+      await pgDrizzle(ctx.env.DATABASE_URL)
         .update(note)
         .set({ title, updatedAt: new Date() })
         .where(eq(note.id, id))
@@ -215,13 +221,15 @@ notes.patch(
     }
 
     try {
-      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
+      const noteIdExists = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.note.findFirst({
         where: (note, { eq }) => eq(note.id, id),
       })
 
       if (!noteIdExists) return ctx.text('Note id not exists', 404)
 
-      await database(ctx.env.DB)
+      await pgDrizzle(ctx.env.DATABASE_URL)
         .update(note)
         .set({
           description,
@@ -255,13 +263,18 @@ notes.delete(
     if (!id) return ctx.text('Missing id', 400)
 
     try {
-      const noteExist = await database(ctx.env.DB).query.note.findFirst({
+      const noteExist = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.note.findFirst({
         where: (note, { eq }) => eq(note.id, id),
       })
 
       if (!noteExist) return ctx.text('Note was deleted or no exist', 404)
 
-      await database(ctx.env.DB).delete(note).where(eq(note.id, id)).returning()
+      await pgDrizzle(ctx.env.DATABASE_URL)
+        .delete(note)
+        .where(eq(note.id, id))
+        .returning()
 
       return ctx.text('Note was delete successfully', 200)
     } catch (error) {
@@ -276,7 +289,7 @@ notes.delete(
 
 notes.delete('/all', async ctx => {
   try {
-    await database(ctx.env.DB).delete(note)
+    await pgDrizzle(ctx.env.DATABASE_URL).delete(note)
 
     return ctx.text('All notes was deleted successfully', 200)
   } catch (error) {
