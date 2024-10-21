@@ -28,9 +28,9 @@ jobs:
 
       - name: Check if API files changed
         id: changed-files
-        uses: tj-actions/changed-files
+        uses: tj-actions/changed-files@v45
         with: 
-         files: src/**/*.ts
+         files: src/*.{ts,js}
 
       - name: Install
         if: steps.changed-files.outputs.any_changed == 'true'
