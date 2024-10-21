@@ -4,7 +4,9 @@
     "enabled": true
   },
   "formatter": {
-    "include": ["src/**/*.ts"],
+    "include": [
+      "src/**/*.ts"
+    ],
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 80
@@ -24,6 +26,8 @@
     }
   },
   "files": {
-    "ignore": ["node_modules"]
+    "ignore": [
+      "node_modules"
+    ]
   }
 }
