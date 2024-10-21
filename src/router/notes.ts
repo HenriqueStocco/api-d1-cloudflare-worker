@@ -1,8 +1,8 @@
-import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
+import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Bindings } from '..'
-import { database, asc, eq } from '../db'
+import { asc, database, eq } from '../db'
 import { note } from '../db/schema'
 
 export const notes = new Hono<{ Bindings: Bindings }>()
