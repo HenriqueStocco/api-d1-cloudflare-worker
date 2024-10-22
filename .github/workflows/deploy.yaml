@@ -37,7 +37,7 @@ jobs:
       
       - name: Install
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: ./github-actions/action
+        uses: ./action
 
       - name: Build API to Cloudflare bundle
         if: steps.changed-files.outputs.any_changed == 'true'
