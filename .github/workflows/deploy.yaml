@@ -33,11 +33,11 @@ jobs:
           files: src/*.{ts,js}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Install
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: ./.github/github-actions/action
+        uses: ./github-actions/install
 
       - name: Build API to Cloudflare bundle
         if: steps.changed-files.outputs.any_changed == 'true'
