@@ -33,7 +33,7 @@ jobs:
           files: src/*.{ts,js}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout
       
       - name: Install
         if: steps.changed-files.outputs.any_changed == 'true'
