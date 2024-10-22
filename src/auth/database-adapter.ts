@@ -4,13 +4,13 @@ import type {
   DatabaseUser,
   RegisteredDatabaseSessionAttributes,
 } from 'lucia'
-import { eq, lte, pgDrizzle, type Client } from '../db'
-import { userSession, user } from '../db/schema'
+import { eq, lte, pgDrizzle } from '../db'
+import { userSession, users } from '../db/schema'
 
 export class PostgresAdapter implements BaseAdapter {
-  private dbClient: Client
+  private dbClient: string
 
-  constructor(dbClient: Client) {
+  constructor(dbClient: string) {
     this.dbClient = dbClient
   }
 
@@ -59,9 +59,9 @@ export class PostgresAdapter implements BaseAdapter {
         expires_at: sessionResult.expiresAt,
       })
       const [userResult] = await pgDrizzle(this.dbClient)
-        .select({ id: user.id })
-        .from(user)
-        .where(eq(user.id, session.userId))
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, session.userId))
 
       if (userResult) {
         return [
