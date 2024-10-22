@@ -5,4 +5,5 @@ account_id = "4aa839773109421527f1f0147e3557c0"
 compatibility_flags = [ "nodejs_compat" ]
 
 [env.local.vars]
+
 minify = true
