@@ -25,16 +25,3 @@ runs:
     - name: Install dependencies
       shell: bash
       run: bun install
-# name: "Install"
-# description: "Setup Bun and install dependencies"
-# runs:
-#   using: "composite"
-#   steps:
-#     - name: Setup Bun
-#       uses: oven-sh/setup-bun@v2
-#       with:
-#         bun-version: 1.1.30
-#     - name: Cache node_modules
-#       uses: actions/cache@v4
-#       with:
-#         path: ~/.bun/install/cache
