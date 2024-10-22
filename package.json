@@ -1,7 +1,7 @@
 {
   "name": "working-with-cloudf-worker",
   "scripts": {
-    "dev": "wrangler dev --port 9000 --inspector-port 9230",
+    "dev": "wrangler dev --port 9000 --inspector-port 9230 --env=local",
     "deploy": "wrangler deploy",
     "lint": "biome lint ./",
     "format": "biome format --write ./",
