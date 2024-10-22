@@ -34,7 +34,7 @@ jobs:
 
       - name: Install
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: ./action.yaml
+        uses: /action.yaml
 
       - name: Build API to Cloudflare bundle
         if: steps.changed-files.outputs.any_changed == 'true'
