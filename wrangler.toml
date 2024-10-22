@@ -6,5 +6,5 @@ compatibility_flags = [ "nodejs_compat" ]
 [env.local]
 minify = true
 
-[env.prod]
+[env.production]
 minify = true
