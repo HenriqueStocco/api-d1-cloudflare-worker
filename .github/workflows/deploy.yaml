@@ -1,6 +1,11 @@
 name: Staging Deploy
 on: workflow_dispatch
 
+permissions:
+  id-token: write
+  contents: read
+  deployments: write
+
 jobs:
   quality:
     runs-on: ubuntu-latest
