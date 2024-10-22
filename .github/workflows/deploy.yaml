@@ -25,7 +25,7 @@ jobs:
     needs: [quality]
     steps: 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout
 
       - name: Check if API files changed
         id: changed-files
