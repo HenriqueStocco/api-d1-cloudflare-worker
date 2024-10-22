@@ -3,15 +3,10 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
-    "lib": [
-      "ESNext"
-    ],
-    "types": [
-      "@cloudflare/workers-types/2023-07-01"
-    ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  },
+    "lib": ["ESNext"],
+    "types": ["@cloudflare/workers-types/2023-07-01", "@types/bun"]
+  }
 }

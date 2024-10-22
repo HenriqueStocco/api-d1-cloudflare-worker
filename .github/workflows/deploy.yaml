@@ -30,11 +30,14 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v45
         with: 
-         files: src/*.{ts,js}
+          files: src/*.{ts,js}
 
+      - name: Checkout
+        uses: actions/checkout@v4
+      
       - name: Install
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: ./action.yaml
+        uses: ./github-actions/install
 
       - name: Build API to Cloudflare bundle
         if: steps.changed-files.outputs.any_changed == 'true'

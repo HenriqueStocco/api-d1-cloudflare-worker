@@ -4,6 +4,7 @@ dist/
 # dev
 .yarn/
 !.yarn/releases
+.vscode
 .vscode/*
 !.vscode/launch.json
 !.vscode/*.code-snippets
@@ -28,9 +29,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+get-token
 # misc
 .DS_Store
 
-# wrangler toml
-wrangler.toml
+# migrations of the database
+src/db/migrations

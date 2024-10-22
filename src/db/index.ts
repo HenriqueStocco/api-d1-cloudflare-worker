@@ -1,11 +1,11 @@
-import { drizzle } from 'drizzle-orm/d1'
+import { neon } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http'
 import * as schema from './schema'
 
-export const database = (databaseClient: D1Database) =>
-  drizzle(databaseClient, {
-    schema: schema,
-    logger: true,
-  })
+export const pgDrizzle = (client: string) => {
+  const neonClient = neon(client)
+  return drizzle(neonClient, { schema, logger: true })
+}
 
-export { eq, and, asc } from 'drizzle-orm'
+export { eq, and, asc, sql, lte } from 'drizzle-orm'
 export { schema }

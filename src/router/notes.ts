@@ -2,20 +2,24 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Bindings } from '..'
-import { asc, database, eq } from '../db'
-import { note } from '../db/schema'
+import { asc, eq, pgDrizzle, sql } from '../db'
+import { notes } from '../db/schema'
+import { authMiddleware } from './middlewares/authentication'
 
-export const notes = new Hono<{ Bindings: Bindings }>()
+export const note = new Hono<{ Bindings: Bindings }>()
+note.use(authMiddleware)
 
 /**
  * Get all notes
  */
-notes.get('/', async ctx => {
+note.get('/', async ctx => {
+  const userId = ctx.var.userId
   try {
-    const allNotes = await database(ctx.env.DB)
+    const allNotes = await pgDrizzle(ctx.env.DATABASE_URL)
       .select()
-      .from(note)
-      .orderBy(asc(note.id))
+      .from(notes)
+      .where(eq(notes.userId, userId))
+      .orderBy(asc(notes.id))
 
     if (allNotes.length <= 0)
       return ctx.json({ message: 'Tasks no exists' }, 200)
@@ -30,7 +34,7 @@ notes.get('/', async ctx => {
 /**
  * Get one specific note by id
  */
-notes.get(
+note.get(
   '/:id',
   zValidator(
     'param',
@@ -40,12 +44,14 @@ notes.get(
   ),
   async ctx => {
     const { id } = ctx.req.valid('param')
+    const userId = ctx.var.userId as string
 
-    if (!id) return ctx.text('Missing note id', 400)
+    if (!id) return ctx.text('Missing note id or userId', 400)
 
     try {
-      const note = await database(ctx.env.DB).query.note.findFirst({
-        where: (note, { eq }) => eq(note.id, id),
+      const note = await pgDrizzle(ctx.env.DATABASE_URL).query.notes.findFirst({
+        where: (note, { eq, and }) =>
+          and(eq(note.id, id), eq(note.userId, userId)),
       })
 
       if (!note) return ctx.text('Note not exists', 404)
@@ -61,7 +67,7 @@ notes.get(
 /**
  * Create a note
  */
-notes.post(
+note.post(
   '/',
   zValidator(
     'json',
@@ -74,6 +80,7 @@ notes.post(
     }),
   ),
   async ctx => {
+    const userId = ctx.var.userId as string
     const { title, description } = ctx.req.valid('json')
 
     if (!title || !description)
@@ -83,13 +90,14 @@ notes.post(
       )
 
     try {
-      await database(ctx.env.DB)
-        .insert(note)
+      await pgDrizzle(ctx.env.DATABASE_URL)
+        .insert(notes)
         .values({
+          userId,
           title,
           description,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: sql`NOW()`,
+          updatedAt: sql`NOW()`,
         })
         .returning()
 
@@ -104,7 +112,7 @@ notes.post(
 /**
  * Update an entire note by id
  */
-notes.put(
+note.put(
   '/:id',
   zValidator(
     'param',
@@ -125,6 +133,7 @@ notes.put(
   async ctx => {
     const { id } = ctx.req.valid('param')
     const { title, description } = ctx.req.valid('json')
+    const userId = ctx.var.userId as string
 
     if (!id || !title || !description)
       return ctx.json(
@@ -133,20 +142,23 @@ notes.put(
       )
 
     try {
-      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
-        where: (note, { eq }) => eq(note.id, id),
+      const noteIdExists = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.notes.findFirst({
+        where: (note, { eq, and }) =>
+          and(eq(note.id, id), eq(note.userId, userId)),
       })
 
       if (!noteIdExists) return ctx.text('Note id not exists', 404)
 
-      await database(ctx.env.DB)
-        .update(note)
+      await pgDrizzle(ctx.env.DATABASE_URL)
+        .update(notes)
         .set({
           title: title,
           description: description,
           updatedAt: new Date(),
         })
-        .where(eq(note.id, id))
+        .where(eq(notes.id, id))
 
       return ctx.text('Note was successfully updated', 200)
     } catch (error) {
@@ -159,7 +171,7 @@ notes.put(
 /**
  * Update just the title
  */
-notes.patch(
+note.patch(
   '/:id/title',
   zValidator('param', z.object({ id: z.coerce.number() })),
   zValidator(
@@ -171,20 +183,24 @@ notes.patch(
   async ctx => {
     const { id } = ctx.req.valid('param')
     const { title } = ctx.req.valid('json')
+    const userId = ctx.var.userId as string
 
     if (!id || !title) return ctx.text('Missing note id or new title', 400)
 
     try {
-      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
-        where: (note, { eq }) => eq(note.id, id),
+      const noteIdExists = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.notes.findFirst({
+        where: (note, { eq, and }) =>
+          and(eq(note.id, id), eq(note.userId, userId)),
       })
 
       if (!noteIdExists) return ctx.text('Note id not exists', 404)
 
-      await database(ctx.env.DB)
-        .update(note)
+      await pgDrizzle(ctx.env.DATABASE_URL)
+        .update(notes)
         .set({ title, updatedAt: new Date() })
-        .where(eq(note.id, id))
+        .where(eq(notes.id, id))
 
       return ctx.text('Title was updated successfully', 200)
     } catch (error) {
@@ -197,7 +213,7 @@ notes.patch(
 /**
  * Update just the description
  */
-notes.patch(
+note.patch(
   '/:id/description',
   zValidator('param', z.object({ id: z.coerce.number() })),
   zValidator(
@@ -209,25 +225,29 @@ notes.patch(
   async ctx => {
     const { id } = ctx.req.valid('param')
     const { description } = ctx.req.valid('json')
+    const userId = ctx.var.userId as string
 
     if (!id || !description) {
       return ctx.text('Missing note id or new description', 400)
     }
 
     try {
-      const noteIdExists = await database(ctx.env.DB).query.note.findFirst({
-        where: (note, { eq }) => eq(note.id, id),
+      const noteIdExists = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.notes.findFirst({
+        where: (note, { eq, and }) =>
+          and(eq(note.id, id), eq(note.userId, userId)),
       })
 
       if (!noteIdExists) return ctx.text('Note id not exists', 404)
 
-      await database(ctx.env.DB)
-        .update(note)
+      await pgDrizzle(ctx.env.DATABASE_URL)
+        .update(notes)
         .set({
           description,
           updatedAt: new Date(),
         })
-        .where(eq(note.id, id))
+        .where(eq(notes.id, id))
         .returning()
 
       return ctx.text('Description was updated successfully', 200)
@@ -241,7 +261,7 @@ notes.patch(
 /**
  * Delete one specific note by id
  */
-notes.delete(
+note.delete(
   '/:id',
   zValidator(
     'param',
@@ -251,17 +271,24 @@ notes.delete(
   ),
   async ctx => {
     const { id } = ctx.req.valid('param')
+    const userId = ctx.var.userId as string
 
     if (!id) return ctx.text('Missing id', 400)
 
     try {
-      const noteExist = await database(ctx.env.DB).query.note.findFirst({
-        where: (note, { eq }) => eq(note.id, id),
+      const noteExist = await pgDrizzle(
+        ctx.env.DATABASE_URL,
+      ).query.notes.findFirst({
+        where: (note, { eq, and }) =>
+          and(eq(note.id, id), eq(note.userId, userId)),
       })
 
       if (!noteExist) return ctx.text('Note was deleted or no exist', 404)
 
-      await database(ctx.env.DB).delete(note).where(eq(note.id, id)).returning()
+      await pgDrizzle(ctx.env.DATABASE_URL)
+        .delete(notes)
+        .where(eq(notes.id, id))
+        .returning()
 
       return ctx.text('Note was delete successfully', 200)
     } catch (error) {
@@ -270,18 +297,3 @@ notes.delete(
     }
   },
 )
-
-/**
- * Delete all notes
-
-notes.delete('/all', async ctx => {
-  try {
-    await database(ctx.env.DB).delete(note)
-
-    return ctx.text('All notes was deleted successfully', 200)
-  } catch (error) {
-    console.error(error)
-    return ctx.text('Internal Server Error', 500)
-  }
-})
-*/
