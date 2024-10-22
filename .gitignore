@@ -35,3 +35,6 @@ lerna-debug.log*
 
 # wrangler toml
 wrangler.toml
+
+# migrations of the database
+src/db/migrations
