@@ -1,8 +1,5 @@
 name: Staging Deploy
-on: 
-  pull_request:
-    branches:
-      - main
+on: workflow_dispatch
 
 jobs:
   quality:
@@ -45,8 +42,8 @@ jobs:
 
       - name: Deploy API to Cloudflare Worker (Production)
         if: steps.changed-files.outputs.any_changed == 'true'
+        run: bun run wrangler deploy --env prod
         env: 
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: bun run wrangler deploy
