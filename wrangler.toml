@@ -5,7 +5,6 @@ compatibility_date = "2024-10-17"
 
 compatibility_flags = [ "nodejs_compat" ]
 
-nodejs_compat = true
 [env.prod]
 
 minify = true
