@@ -14,19 +14,19 @@
     "@hono/zod-validator": "^0.4.1",
     "@neondatabase/serverless": "^0.10.1",
     "bcryptjs": "^2.4.3",
-    "drizzle-orm": "^0.35.2",
-    "hono": "^4.6.5",
+    "drizzle-orm": "^0.35.3",
+    "hono": "^4.6.6",
     "lucia": "^3.2.2",
     "pg": "^8.13.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@cloudflare/workers-types": "^4.20241018.0",
+    "@cloudflare/workers-types": "^4.20241022.0",
     "@types/bcryptjs": "^2.4.6",
-    "@types/bun": "^1.1.11",
+    "@types/bun": "^1.1.12",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.26.2",
-    "wrangler": "^3.81.0"
+    "wrangler": "^3.82.0"
   }
 }
