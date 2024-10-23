@@ -2,7 +2,7 @@
   "name": "working-with-cloudf-worker",
   "scripts": {
     "dev": "wrangler dev --port 9000 --inspector-port 9230 --env=local",
-    "deploy": "wrangler deploy --env=local",
+    "deploy": "wrangler deploy --env=prod",
     "lint": "biome lint ./",
     "format": "biome format --write ./",
     "db:generate": "drizzle-kit generate --config=./drizzle.config.ts",
